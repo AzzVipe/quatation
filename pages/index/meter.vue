@@ -4,12 +4,58 @@
 			v-if="!isFetching"
 			class="flex flex-col md:w-8/12 w-full sm:p-8 gap-8 p-4 items-center relative">
 			<button
-				@click="saveState('/details')"
+				@click="saveState('/test')"
 				class="text-3xl absolute top-1/2 left-2">
 				<i class="ri-arrow-left-circle-fill"></i>
 			</button>
+			<div class="flex w-11/12 flex-col justify-center box-styling">
+				<h1 class="md:text-3xl text-xl font-bold">Details</h1>
+				<div class="flex flex-col gap-4">
+					<div class="grid md:grid-cols-2 gap-4">
+						<div class="w-full flex flex-col gap-2">
+							<h1 class="font-semibold">Choose your current supplier:</h1>
+							<SearchDropdown :list="suppliers" :header="`Supplier`" />
+						</div>
+						<div class="w-full flex flex-col gap-2">
+							<h1 class="font-semibold">Choose your business type:</h1>
+							<SearchDropdown :list="businessTypes" :header="`Business Type`" />
+						</div>
+						<div class="w-full flex flex-col gap-2 font-medium">
+							<label for="email" class="font-semibold">Email:</label>
+							<div class="relative">
+								<div
+									class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+									<i class="ri-mail-fill"></i>
+								</div>
+								<input
+									name="email"
+									type="email"
+									v-model="email"
+									class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
+									placeholder="example@domain.com" />
+							</div>
+						</div>
+						<div class="w-full flex flex-col gap-2 font-medium">
+							<label for="email" class="font-semibold">Phone:</label>
+							<div class="relative">
+								<div
+									class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+									<i class="ri-phone-fill"></i>
+								</div>
+								<input
+									name="phone"
+									type="tel"
+									maxlength="10"
+									v-model="phone"
+									class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
+									placeholder="1234567890" />
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div
-				v-if="!calcAnnualConsumption && !flag"
+				v-if="!calcAnnualConsumption && !isConsumptionCalculated"
 				class="flex w-11/12 flex-col justify-center box-styling">
 				<h1 class="md:text-3xl text-xl font-bold">
 					What is your Annual Consumption in Kwh ?
@@ -36,15 +82,12 @@
 
 				<p
 					@click="initAddItem()"
-					class="font-semibold underline underline-offset-2 hover:dark:text-gray-200 hover:text-gray-700 pl-2 cursor-pointer md:text-base text-sm">
+					class="font-semibold underline underline-offset-2 hover:dark:text-gray-200 hover:text-gray-700 pl-2 cursor-pointer md:text-base text-sm w-fit">
 					I don't know, would like to calculate
 				</p>
-				<button class="button-style w-fit" @click="saveState('/submit')">
-					Done
-				</button>
 			</div>
 			<div
-				v-else-if="calcAnnualConsumption && !flag"
+				v-else-if="calcAnnualConsumption && !isConsumptionCalculated"
 				class="flex w-11/12 flex-col justify-center box-styling">
 				<h1 class="md:text-3xl text-xl font-bold">
 					Calculate your Annual Consumption
@@ -136,12 +179,12 @@
 				<button
 					v-if="!areReadingsEmpty()"
 					class="button-style w-fit"
-					@click="calculateQuote">
+					@click="calculateAverage">
 					Calculate
 				</button>
 			</div>
 			<div
-				v-else-if="!calcAnnualConsumption && flag"
+				v-else-if="!calcAnnualConsumption && isConsumptionCalculated"
 				class="flex w-11/12 flex-col justify-center box-styling">
 				<h1 class="md:text-3xl text-xl font-bold">
 					Your average annual consumption:
@@ -182,23 +225,93 @@
 				<h2 class="font-bold text-xl dark:text-blue-500 text-blue-700">
 					Average annual consumption: {{ annualConsumption.toFixed(2) }} Kwh
 				</h2>
+				<!-- <button @click="annualConsumption = 0" class="button-style-gray w-fit">
+					Reset
+				</button> -->
 			</div>
 			<button
-				@click="saveState('/submit')"
-				class="text-3xl absolute top-2/4 right-2">
-				<i class="ri-arrow-right-circle-fill"></i>
+				@click="submitForm()"
+				v-if="isCollectionSet()"
+				class="button-style text-xl">
+				Submit
+			</button>
+			<button v-else class="button-style text-xl !cursor-not-allowed" disabled>
+				Submit
 			</button>
 		</div>
 	</div>
 </template>
 
 <script setup>
+	const { currentUser } = useMyRealmApp();
 	const annualConsumption = ref(null);
 	const calcAnnualConsumption = ref(false);
+	const isConsumptionCalculated = ref(false);
+	const isFetching = ref(false);
 	const collection = ref(null);
 	const readings = ref(null);
-	const flag = ref(false);
-	const isFetching = ref(false);
+	const email = ref(null);
+	const phone = ref(null);
+	const suppliers = ref([
+		"Airtricty",
+		"Avanti Gas",
+		"Axis",
+		"BES Utilities",
+		"BG Lite",
+		"BGB Upfront",
+		"British Gas",
+		"CNG",
+		"Corona Energy",
+		"Crown Gas and Power",
+		"Drax",
+		"Dyce Energy",
+		"E.on",
+		"E.on Next",
+		"Ecotricity",
+		"EDF",
+		"Engie",
+		"Extra Energy",
+		"Gazprom",
+		"Good Energy",
+		"NPower",
+		"NPower White",
+		"Opus Energy",
+		"Orsted",
+		"Ovo Energy",
+		"Pozitive Energy",
+		"Regent Gas",
+		"Scottish Power",
+		"Shell Energy",
+		"Smartest Energy",
+		"Smartest Energy OLD",
+		"SSE",
+		"Total Energies",
+		"Water",
+		"Wingas",
+		"Yorkshire Gas and Power",
+		"YU Energy",
+		"YuEnergy Offering",
+		"Others",
+	]);
+	const businessTypes = ref([
+		"Agricultre",
+		"Catering and Accomodation",
+		"Public House (Free House)",
+		"Public House (Tenant)",
+		"Fast Food / Takeaway",
+		"Construction",
+		"IT Services",
+		"Manufacturing",
+		"Media and Creative Services",
+		"Personal Services",
+		"Professional and Business",
+		"Retail; Hire and Repair",
+		"Transport and Distribution",
+		"Wholesale",
+		"Church",
+		"Charity",
+		"Others",
+	]);
 
 	onBeforeMount(() => {
 		const temp = localStorage.getItem("collection");
@@ -209,12 +322,17 @@
 			navigateTo("/");
 			return;
 		}
-		console.log(collection.value);
+
+		if (collection.value.email !== undefined && collection.value.email !== null)
+			email.value = collection.value.email;
+
+		if (collection.value.phone !== undefined && collection.value.phone !== null)
+			phone.value = collection.value.phone;
+
 		if (
-			collection.value.readings !== undefined ||
+			collection.value.readings !== undefined &&
 			collection.value.readings !== null
 		) {
-			console.log(collection.value.readings);
 			readings.value = collection.value.readings;
 		}
 
@@ -223,17 +341,21 @@
 			collection.value.annualConsumption !== null
 		) {
 			annualConsumption.value = collection.value.annualConsumption;
-
-			if (collection.value.flag !== undefined)
-				flag.value = collection.value.flag;
-			if (
-				collection.value.calcAnnualConsumption !== undefined &&
-				collection.value.calcAnnualConsumption !== null
-			)
-				calcAnnualConsumption.value = collection.value.calcAnnualConsumption;
 		}
 
+		if (
+			collection.value.isConsumptionCalculated !== undefined &&
+			collection.value.isConsumptionCalculated !== null
+		)
+			isConsumptionCalculated.value = collection.value.isConsumptionCalculated;
+		if (
+			collection.value.calcAnnualConsumption !== undefined &&
+			collection.value.calcAnnualConsumption !== null
+		)
+			calcAnnualConsumption.value = collection.value.calcAnnualConsumption;
+
 		isFetching.value = false;
+		console.log(isConsumptionCalculated.value, calcAnnualConsumption.value);
 	});
 
 	const saveState = (path) => {
@@ -247,8 +369,12 @@
 
 		if (readings.value) collection.value.readings = readings.value;
 
+		if (email.value) collection.value.email = email.value;
+
+		if (phone.value) collection.value.phone = phone.value;
+
 		collection.value.calcAnnualConsumption = calcAnnualConsumption.value;
-		collection.value.flag = flag.value;
+		collection.value.isConsumptionCalculated = isConsumptionCalculated.value;
 
 		const jsonObj = JSON.stringify(collection.value);
 		localStorage.setItem("collection", jsonObj);
@@ -261,6 +387,7 @@
 			readings.value = new Array();
 			addItem();
 		}
+		annualConsumption.value = null;
 		calcAnnualConsumption.value = true;
 	};
 
@@ -310,7 +437,7 @@
 		return false;
 	};
 
-	const calculateQuote = () => {
+	const calculateAverage = () => {
 		let avg = 0;
 		for (let index = 0; index < readings.value.length; index++) {
 			const element = readings.value[index];
@@ -323,16 +450,131 @@
 		}
 		console.log(avg);
 		if (avg !== 0) {
-			annualConsumption.value = avg * 365;
+			if (collection.value.quoteType === "electric")
+				annualConsumption.value = avg * 365;
+			else annualConsumption.value = avg * 365 * 11.135413;
 			calcAnnualConsumption.value = false;
-			flag.value = true;
+			isConsumptionCalculated.value = true;
 		}
 		saveState();
 	};
-	// onMounted(() => {
-	// 	const dateRangePickerEl = document.getElementById("datePickerId");
-	// 	new Datepicker(dateRangePickerEl);
-	// });
+
+	const isCollectionSet = () => {
+		let flag = true;
+
+		if (collection.value === null) return false;
+		else if (
+			collection.value.selectedCompany === null ||
+			collection.value.selectedCompany === undefined
+		)
+			flag = false;
+		else if (
+			collection.value.selectedOwner === null ||
+			collection.value.selectedOwner === undefined
+		)
+			flag = false;
+		else if (
+			collection.value.installationAddress === null ||
+			collection.value.installationAddress === undefined
+		)
+			flag = false;
+		else if (
+			collection.value.quoteType === null ||
+			collection.value.quoteType === undefined
+		)
+			flag = false;
+		else if (
+			collection.value["Supplier"] === null ||
+			collection.value["Supplier"] === undefined
+		)
+			flag = false;
+		else if (
+			collection.value["Business Type"] === null ||
+			collection.value["Business Type"] === undefined
+		)
+			flag = false;
+		else if (
+			email.value === null ||
+			email.value === undefined ||
+			email.value === ""
+		)
+			flag = false;
+		else if (
+			phone.value === null ||
+			phone.value === undefined ||
+			phone.value === ""
+		)
+			flag = false;
+		else if (
+			annualConsumption.value === null ||
+			annualConsumption.value === undefined ||
+			Number(annualConsumption.value) === 0 ||
+			annualConsumption.value === "" ||
+			isNaN(annualConsumption.value)
+		) {
+			console.log("OK");
+			flag = false;
+		}
+
+		switch (collection.value.quoteType) {
+			case "electric":
+				if (
+					collection.value.mpan === null ||
+					collection.value.mpan === undefined
+				)
+					flag = false;
+				else if (
+					collection.value.mpan.profileType === null ||
+					collection.value.mpan.profileType === undefined
+				)
+					flag = false;
+			case "gas":
+				if (
+					collection.value.mprn === null ||
+					collection.value.mprn === undefined ||
+					Number(collection.value.mprn) === 0 ||
+					collection.value.mprn === "" ||
+					isNaN(collection.value.mprn)
+				)
+					flag = false;
+		}
+
+		return flag;
+	};
+	const submitForm = () => {
+		// @TODO: check if all the values are set
+
+		const mongo = currentUser.mongoClient("mongodb-atlas");
+		const recordsCollection = mongo.db("db1").collection("records");
+
+		let temp = {};
+
+		temp.is_registered_company = collection.value.isRegComp;
+		temp.company = collection.value.selectedCompany;
+		temp.owner = collection.value.selectedOwner;
+		temp.quote_type = collection.value.quoteType;
+		temp.installation_address = collection.value.installationAddress;
+		temp.supplier = collection.value["Supplier"];
+		temp.business_type = collection.value["Business Type"];
+		temp.annual_consumption = annualConsumption.value;
+		temp.email = email.value;
+		temp.phone = phone.value;
+
+		if (collection.value.quoteType === "electric")
+			temp.mpan = collection.value.mpan;
+		else if (collection.value.quoteType === "gas")
+			temp.mprn = collection.value.mprn;
+		else if (collection.value.quoteType === "both") {
+			temp.mpan = collection.value.mpan;
+			temp.mprn = collection.value.mprn;
+		}
+
+		recordsCollection.insertOne(temp).then((res) => {
+			console.log(res);
+			localStorage.removeItem("collection");
+			navigateTo("/submitted");
+		});
+	};
 </script>
 
 <style lang="scss" scoped></style>

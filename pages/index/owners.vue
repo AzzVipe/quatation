@@ -1,7 +1,7 @@
 <template>
 	<div class="flex w-full items-center gap-4 justify-center">
 		<div
-			class="flex flex-col md:w-8/12 w-full sm:p-8 gap-8 p-4 items-center relative">
+			class="flex flex-col xl:w-8/12 w-full sm:p-8 gap-8 p-4 items-center relative">
 			<button @click="navigateTo('/')" class="text-3xl absolute top-1/2 left-2">
 				<i class="ri-arrow-left-circle-fill"></i>
 			</button>

@@ -1,7 +1,7 @@
 <template>
 	<div class="flex w-full items-center gap-4 justify-center">
 		<div
-			class="flex flex-col md:w-8/12 w-full sm:p-8 gap-8 p-4 items-center relative">
+			class="flex flex-col 2xl:w-8/12 xl:w-10/12 w-full sm:p-8 gap-8 p-4 items-center relative">
 			<div class="flex w-11/12 flex-col justify-center box-styling">
 				<h1 class="md:text-3xl text-xl font-bold">
 					Are you a Registered Company or a Sole Trader ?
@@ -14,7 +14,7 @@
 						<img
 							src="~/public/enterprise.png"
 							alt="Sole Trader"
-							class="md:w-[100px] w-[70px]" />
+							class="md:w-[80px] w-[60px]" />
 						<p>I have a Registered Company</p>
 					</button>
 					<button
@@ -24,7 +24,7 @@
 						<img
 							src="~/public/trader.png"
 							alt="Sole Trader"
-							class="md:w-[100px] w-[70px]" />
+							class="md:w-[80px] w-[60px]" />
 						<p>I am a Sole Trader</p>
 					</button>
 				</div>
@@ -40,105 +40,217 @@
 				</div>
 			</div>
 			<div
-				v-if="company"
+				v-if="selectedOwner === null && company && isRegComp"
 				class="flex w-11/12 flex-col justify-center box-styling">
-				<h1 v-if="isMeterAddressSame" class="md:text-3xl text-xl font-bold">
-					Is your meter address same as company address ?
-				</h1>
-				<h1 v-else class="md:text-3xl text-xl font-bold">Meter address</h1>
-				<div class="flex gap-4 md:text-base text-sm">
+				<h1 class="md:text-3xl text-xl font-bold">Company owner</h1>
+				<div
+					v-if="selectOwnerToggle"
+					class="flex flex-wrap gap-8 sm:text-base text-sm">
+					<!-- <h1 class="font-medium text-lg">{{ companyOwners.items }}</h1> -->
 					<div
-						v-if="fetching"
-						class="flex w-full px-4 py-2 justify-center self-center">
-						<svg
-							aria-hidden="true"
-							class="w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
-							viewBox="0 0 100 101"
-							fill="none"
-							xmlns="http://www.w3.org/2000/svg">
-							<path
-								d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-								fill="currentColor" />
-							<path
-								d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-								fill="currentFill" />
-						</svg>
-						<span class="sr-only">Loading...</span>
+						@click="clickedOwner(item)"
+						v-for="(item, index) in companyOwners.items"
+						:key="item.id"
+						class="flex gap-2">
+						<input
+							:id="`item-${index}`"
+							type="radio"
+							:value="index"
+							class="self-start rounded scale-105"
+							name="owner" />
+						<label
+							:for="`item-${index}`"
+							class="hover:bg-slate-200 hover:dark:bg-gray-400/10 rounded p-2">
+							<div class="flex gap-2" v-if="item.name">
+								<h1 class="details-heading">Fullname:</h1>
+								<p class="details-body">
+									{{ item.name }}
+								</p>
+							</div>
+							<div v-if="item.address">
+								<div class="flex gap-2" v-if="item.address.address_line_1">
+									<span class="details-heading">Address line 1: </span>
+									<p class="details-body">
+										{{ item.address.address_line_1 }}
+									</p>
+								</div>
+								<div class="flex gap-2" v-if="item.address.address_line_2">
+									<span class="details-heading">Address line 2: </span>
+									<p class="details-body">
+										{{ item.address.address_line_2 }}
+									</p>
+								</div>
+								<div class="flex gap-2" v-if="item.address.locality">
+									<span class="details-heading">Locality: </span>
+									<p class="details-body">
+										{{ item.address.locality }}
+									</p>
+								</div>
+								<div class="flex gap-2" v-if="item.address.region">
+									<span class="details-heading">Region: </span>
+									<p class="details-body">
+										{{ item.address.region }}
+									</p>
+								</div>
+								<div class="flex gap-2" v-if="item.address.postal_code">
+									<span class="details-heading">Postal code: </span>
+									<p class="details-body">
+										{{ item.address.postal_code }}
+									</p>
+								</div>
+								<div class="flex gap-2" v-if="item.address.country">
+									<span class="details-heading">Country: </span>
+									<p class="details-body">
+										{{ item.address.country }}
+									</p>
+								</div>
+							</div>
+							<div class="flex gap-2" v-if="item.date_of_birth">
+								<h1 class="details-heading">Date of birth:</h1>
+								<p class="details-body">
+									{{ item.date_of_birth.month }}/{{ item.date_of_birth.year }}
+								</p>
+							</div>
+						</label>
 					</div>
-					<div
-						v-if="addressToggle && !fetching"
-						class="w-full grid grid-auto-column gap-4">
-						<div v-if="address.address_line_1">
-							<span class="details-heading">Address line 1: </span>
-							<p class="details-body">
-								{{ address.address_line_1 }}
-							</p>
-						</div>
-						<div v-if="address.address_line_2">
-							<span class="details-heading">Address line 2: </span>
-							<p class="details-body">
-								{{ address.address_line_2 }}
-							</p>
-						</div>
-						<div v-if="address.locality">
-							<span class="details-heading">Locality: </span>
-							<p class="details-body">
-								{{ address.locality }}
-							</p>
-						</div>
-						<div v-if="address.postal_code">
-							<span class="details-heading">Postal code: </span>
-							<p class="details-body">
-								{{ address.postal_code }}
-							</p>
-						</div>
-						<div v-if="address.country">
-							<span class="details-heading">Country: </span>
-							<p class="details-body">
-								{{ address.country }}
-							</p>
-						</div>
-					</div>
-					<div v-if="addressToggle" class="flex-1 flex flex-col gap-4"></div>
-					<div v-else class="flex-1 flex flex-col gap-4">
-						<span class="font-semibold">Postal code: </span>
-						<AddressDropdown @selected-address="handleSelectedAddress" />
+					<div @click="selectOwnerToggle = false" class="flex gap-2">
+						<input
+							id="item-others"
+							type="radio"
+							class="self-start rounded scale-105"
+							name="owner" />
+						<label
+							for="item-others"
+							class="hover:bg-slate-200 h-fit hover:dark:bg-gray-400/10 rounded p-2"
+							>Others</label
+						>
 					</div>
 				</div>
-				<div v-if="!fetching" class="flex gap-4 items-center sm:flex-row">
-					<button
-						v-if="isMeterAddressSame === true && addressToggle === true"
-						class="button-style"
-						@click="saveState()">
-						<p>Yes</p>
-					</button>
-					<button
-						v-if="isMeterAddressSame === true"
-						class="button-style-gray"
-						@click="isMeterAddressSame = addressToggle = false">
-						<p>No, I want to change it</p>
-					</button>
-					<button
-						v-if="isMeterAddressSame === false && addressToggle === false"
-						class="button-style"
-						@click="isMeterAddressSame = addressToggle = true">
-						<p>Cancel</p>
-					</button>
-					<button
-						v-if="isMeterAddressSame === false && addressToggle === true"
-						class="button-style"
-						@click="saveState()">
-						<p>Next</p>
-					</button>
-					<button
-						v-if="isMeterAddressSame === false && addressToggle === true"
-						class="flex gap-2 font-semibold cursor-pointer option-box-styling"
-						@click="isMeterAddressSame = addressToggle = false">
-						<p>Change</p>
-					</button>
+				<div v-else class="flex flex-col gap-4">
+					<div class="w-full flex flex-wrap gap-4">
+						<div class="w-full grid grid-auto-column gap-4">
+							<div class="flex flex-col gap-2 font-medium">
+								<label class="font-semibold" for="first-name"
+									>First name:</label
+								>
+								<div class="relative">
+									<div
+										class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+										<i class="ri-input-method-fill"></i>
+									</div>
+									<input
+										name="first-name"
+										v-model="customOwner.firstName"
+										type="text"
+										class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
+										placeholder="First name" />
+								</div>
+							</div>
+							<div class="flex flex-col gap-2 font-medium">
+								<label class="font-semibold" for="last-name">Last name:</label>
+								<div class="relative">
+									<div
+										class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+										<i class="ri-input-method-fill"></i>
+									</div>
+									<input
+										v-model="customOwner.lastName"
+										name="last-name"
+										type="text"
+										class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
+										placeholder="Last name" />
+								</div>
+							</div>
+							<div class="flex flex-col gap-2 font-medium">
+								<label class="font-semibold" for="start-date"
+									>Date of birth:</label
+								>
+								<input
+									v-model="customOwner.dob"
+									name="start-date"
+									type="date"
+									class="w-full max-w-lg font-medium md:text-base text-sm rounded block p-3 focus:outline-none input-box-color"
+									placeholder="DOB" />
+							</div>
+						</div>
+
+						<div class="w-full flex flex-col gap-2 font-medium">
+							<span class="font-semibold">Postal code: </span>
+							<AddressDropdown @selected-address="handleOwnerSelectedAddress" />
+						</div>
+					</div>
+					<div class="flex gap-4 pt-2">
+						<button class="button-style" @click="addCustomOwner()">Done</button>
+						<button class="button-style-gray" @click="selectOwnerToggle = true">
+							Cancel
+						</button>
+					</div>
 				</div>
 			</div>
-			<button @click="saveState()" class="text-3xl absolute top-2/4 right-2">
+			<div
+				v-else-if="company && isRegComp"
+				class="flex w-11/12 flex-col justify-center box-styling">
+				<h1 class="md:text-3xl text-xl font-bold">Company owner</h1>
+				<div class="w-full grid grid-auto-column gap-4">
+					<div v-if="selectedOwner.name">
+						<span class="details-heading">Fullname</span>
+						<p class="details-body">
+							{{ selectedOwner.name }}
+						</p>
+					</div>
+					<div v-if="selectedOwner.date_of_birth">
+						<span class="details-heading">Date of Birth</span>
+						<p class="details-body" v-if="selectedOwner.date_of_birth.month">
+							{{ selectedOwner.date_of_birth.year }} /
+							{{ selectedOwner.date_of_birth.month }}
+						</p>
+						<p v-else>{{ selectedOwner.date_of_birth }}</p>
+					</div>
+					<div v-if="selectedOwner.address.address_line_1">
+						<span class="details-heading">Address line 1: </span>
+						<p class="details-body">
+							{{ selectedOwner.address.address_line_1 }}
+						</p>
+					</div>
+					<div v-if="selectedOwner.address.address_line_2">
+						<span class="details-heading">Address line 2: </span>
+						<p class="details-body">
+							{{ selectedOwner.address.address_line_2 }}
+						</p>
+					</div>
+					<div v-if="selectedOwner.address.locality">
+						<span class="details-heading">Locality: </span>
+						<p class="details-body">
+							{{ selectedOwner.address.locality }}
+						</p>
+					</div>
+					<div v-if="selectedOwner.address.region">
+						<span class="details-heading">Region: </span>
+						<p class="details-body">
+							{{ selectedOwner.address.region }}
+						</p>
+					</div>
+					<div v-if="selectedOwner.address.postal_code">
+						<span class="details-heading">Postal code: </span>
+						<p class="details-body">
+							{{ selectedOwner.address.postal_code }}
+						</p>
+					</div>
+					<div v-if="selectedOwner.address.country">
+						<span class="details-heading">Country: </span>
+						<p class="details-body">
+							{{ selectedOwner.address.country }}
+						</p>
+					</div>
+					<!-- <div v-if="selectedOwner.address" class="flex flex-wrap gap-2"></div> -->
+				</div>
+				<button class="button-style-gray w-fit" @click="selectedOwner = null">
+					Reset
+				</button>
+			</div>
+			<button
+				@click="saveState('/test')"
+				class="text-3xl absolute top-2/4 right-2">
 				<i class="ri-arrow-right-circle-fill"></i>
 			</button>
 		</div>
@@ -147,13 +259,14 @@
 
 <script setup>
 	const { getAddressByID } = useMyRealmApp();
-	const isRegComp = ref(false);
-	const company = ref(null);
-	const isMeterAddressSame = ref(true);
-	const addressToggle = ref(true);
-	const address = ref();
-	const fetching = ref(false);
 	const collection = ref(null);
+
+	const isRegComp = ref(false);
+	const selectOwnerToggle = ref(true);
+	const company = ref(null);
+	const companyOwners = ref(null);
+	const selectedOwner = ref(null);
+	const customOwner = ref({ name: "", address: {}, dob: "" });
 
 	onBeforeMount(() => {
 		const temp = localStorage.getItem("collection");
@@ -163,9 +276,15 @@
 
 		company.value = collection.value.selectedCompany;
 		isRegComp.value = collection.value.isRegComp;
-		isMeterAddressSame.value = collection.value.isMeterAddressSame;
-		address.value = collection.value.address;
-		addressToggle.value = collection.value.addressToggle;
+
+		if (collection.value.companyOwners !== undefined) {
+			companyOwners.value = collection.value.companyOwners;
+		}
+
+		if (collection.value.selectedOwner !== undefined) {
+			selectedOwner.value = collection.value.selectedOwner;
+			console.log(selectedOwner.value);
+		}
 	});
 
 	watch(isRegComp, (newVal, oldVal) => {
@@ -186,28 +305,48 @@
 		}
 	});
 
-	const handleSelectedCompany = (data) => {
+	const handleSelectedCompany = (data, owners) => {
 		company.value = data;
-		console.log(company.value);
-		address.value = company.value.registered_office_address;
-		addressToggle.value = true;
-		isMeterAddressSame.value = true;
+		companyOwners.value = owners;
+		// console.log(company.value);
+		saveState();
 	};
 
-	const handleSelectedAddress = async (data) => {
-		fetching.value = true;
-		addressToggle.value = true;
+	const handleOwnerSelectedAddress = async (data) => {
 		const res = await getAddressByID(data.id);
-		address.value.postal_code = res.postcode;
-		address.value.address_line_1 = res.line_1;
-		address.value.address_line_2 = res.line_2;
-		address.value.locality = res.locality;
-		address.value.country = res.country;
-		console.log(res);
-		fetching.value = false;
+		customOwner.value.address.postal_code = res.postcode;
+		customOwner.value.address.address_line_1 = res.line_1;
+		customOwner.value.address.address_line_2 = res.line_2;
+		customOwner.value.address.locality = res.locality;
+		customOwner.value.address.country = res.country;
+		// customOwner.value.address = data;
 	};
 
-	const saveState = () => {
+	const clickedOwner = (item) => {
+		if (selectedOwner.value === null || selectedOwner.value === undefined) {
+			selectedOwner.value = new Object();
+		}
+		selectedOwner.value.name = item.name;
+		selectedOwner.value.address = item.address;
+		selectedOwner.value.date_of_birth = item.date_of_birth;
+
+		saveState();
+	};
+
+	const addCustomOwner = () => {
+		// @TODO: check if fields are empty
+		if (selectedOwner.value === null || selectedOwner.value === undefined) {
+			selectedOwner.value = new Object();
+		}
+		selectedOwner.value.name =
+			customOwner.value.firstName + " " + customOwner.value.lastName;
+		selectedOwner.value.address = customOwner.value.address;
+		selectedOwner.value.date_of_birth = customOwner.value.dob;
+		saveState();
+		// console.log(customOwner.value.address, selectedOwner.value.address);
+	};
+
+	const saveState = (path) => {
 		const temp = localStorage.getItem("collection");
 		collection.value = JSON.parse(temp);
 
@@ -215,19 +354,14 @@
 			collection.value = new Object();
 		}
 
-		if (isRegComp.value) collection.value.isRegComp = isRegComp.value;
+		if (company.value === null) return;
 
-		if (isMeterAddressSame.value)
-			collection.value.isMeterAddressSame = isMeterAddressSame.value;
-
-		if (address.value) collection.value.address = address.value;
-
-		if (addressToggle.value)
-			collection.value.addressToggle = addressToggle.value;
+		collection.value.isRegComp = isRegComp.value;
+		collection.value.selectedOwner = selectedOwner.value;
 
 		const jsonObj = JSON.stringify(collection.value);
 		localStorage.setItem("collection", jsonObj);
 
-		navigateTo("/owners");
+		if (path) navigateTo(path);
 	};
 </script>

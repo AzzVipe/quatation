@@ -122,7 +122,6 @@
 			temp.companyName = companyName.value;
 			temp.selectedCompany = selectedCompany.value;
 			temp.companyArray = companyArray.value;
-			temp.topHit = topHit.value;
 			temp.companyOwners = companyOwners.value;
 
 			const jsonObj = JSON.stringify(temp);
@@ -133,7 +132,6 @@
 		collection.value.companyName = companyName.value;
 		collection.value.selectedCompany = selectedCompany.value;
 		collection.value.companyArray = companyArray.value;
-		collection.value.topHit = topHit.value;
 		collection.value.companyOwners = companyOwners.value;
 
 		const jsonObj = JSON.stringify(collection.value);
@@ -151,7 +149,7 @@
 		companyOwners.value = JSON.parse(temp);
 		console.log(companyOwners.value);
 		saveState();
-		emit("selectedCompany", data);
+		emit("selectedCompany", data, companyOwners.value);
 	};
 </script>
 
