@@ -342,7 +342,6 @@
 		) {
 			annualConsumption.value = collection.value.annualConsumption;
 		}
-
 		if (
 			collection.value.isConsumptionCalculated !== undefined &&
 			collection.value.isConsumptionCalculated !== null
@@ -355,7 +354,6 @@
 			calcAnnualConsumption.value = collection.value.calcAnnualConsumption;
 
 		isFetching.value = false;
-		console.log(isConsumptionCalculated.value, calcAnnualConsumption.value);
 	});
 
 	const saveState = (path) => {
@@ -528,6 +526,7 @@
 					collection.value.mpan.profileType === undefined
 				)
 					flag = false;
+				break;
 			case "gas":
 				if (
 					collection.value.mprn === null ||
@@ -537,6 +536,7 @@
 					isNaN(collection.value.mprn)
 				)
 					flag = false;
+				break;
 		}
 
 		return flag;
