@@ -134,12 +134,6 @@
 		collection.value = JSON.parse(temp);
 
 		if (collection.value === null) {
-			let temp = {};
-			temp[field] = newVal;
-
-			const jsonObj = JSON.stringify(temp);
-			// console.log(temp[field]);
-			localStorage.setItem("collection", jsonObj);
 			return;
 		}
 

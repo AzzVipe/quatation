@@ -457,34 +457,25 @@
 
 		if (collection.value === null) return;
 
-		if (quoteType.value) {
-			collection.value.quoteType = quoteType.value;
-		}
+		if (!isDataSet()) return;
 
+		collection.value.quoteType = quoteType.value;
 		switch (quoteType.value) {
 			case "electric":
-				if (isMPANset(mpan.value)) {
-					collection.value.mpan = mpan.value;
-				}
+				collection.value.mpan = mpan.value;
+
 				break;
 			case "gas":
-				if (mprn.value) {
-					collection.value.mprn = mprn.value;
-				}
+				collection.value.mprn = mprn.value;
+
 				break;
 			case "both":
-				if (isMPANset(mpan.value)) {
-					collection.value.mpan = mpan.value;
-				}
-				if (mprn.value) {
-					collection.value.mprn = mprn.value;
-				}
+				collection.value.mpan = mpan.value;
+				collection.value.mprn = mprn.value;
 				break;
 		}
 
-		if (installationAddress.value) {
-			collection.value.installationAddress = installationAddress.value;
-		}
+		collection.value.installationAddress = installationAddress.value;
 
 		const jsonObj = JSON.stringify(collection.value);
 		localStorage.setItem("collection", jsonObj);
