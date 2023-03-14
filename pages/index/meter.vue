@@ -56,12 +56,20 @@
 									class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
 									placeholder="example@domain.com" />
 							</div>
+							<p
+								class="error-msg-style"
+								v-if="error.code === ERROR_INVALID_EMAIL">
+								{{ error.msg }}
+							</p>
 						</div>
 						<div class="w-full flex flex-col gap-2 font-medium">
 							<label for="email" class="font-semibold">Phone:</label>
 							<div class="relative">
 								<div
-									class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+									class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"
+									:class="{
+										'error-text-style': isNaN(phone),
+									}">
 									<i class="ri-phone-fill"></i>
 								</div>
 								<input
@@ -70,8 +78,16 @@
 									maxlength="10"
 									v-model="phone"
 									class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
+									:class="{
+										'error-style': isNaN(phone),
+									}"
 									placeholder="1234567890" />
 							</div>
+							<p
+								class="error-msg-style"
+								v-if="error.code === ERROR_INVALID_PHONE || isNaN(phone)">
+								*Invalid phone number
+							</p>
 						</div>
 					</div>
 				</div>
@@ -99,12 +115,12 @@
 
 <script setup>
 	const { currentUser } = useMyRealmApp();
-	const annualConsumption = ref(null);
-
-	const isFetching = ref(false);
+	const ERROR_INVALID_EMAIL = ref(101);
+	const ERROR_INVALID_PHONE = ref(102);
 	const collection = ref(null);
 	const quoteType = ref(null);
 	const email = ref(null);
+	const error = ref({ code: "", msg: "" });
 	const phone = ref(null);
 	const suppliers = ref([
 		"Airtricty",
@@ -170,7 +186,6 @@
 	onBeforeMount(() => {
 		const temp = localStorage.getItem("collection");
 
-		isFetching.value = true;
 		collection.value = JSON.parse(temp);
 		if (collection.value === null) {
 			navigateTo("/");
@@ -191,16 +206,6 @@
 
 		if (collection.value.phone !== undefined && collection.value.phone !== null)
 			phone.value = collection.value.phone;
-
-		if (
-			collection.value.annualConsumption !== undefined &&
-			collection.value.annualConsumption !== null
-		) {
-			annualConsumption.value = collection.value.annualConsumption;
-		}
-
-		isFetching.value = false;
-		console.log(collection.value.electricAnnualConsumption === "");
 	});
 
 	const saveState = (path) => {
@@ -209,12 +214,28 @@
 
 		if (collection.value === null) return;
 
-		if (annualConsumption.value)
-			collection.value.annualConsumption = annualConsumption.value;
+		if (email.value) {
+			if (!validateEmail(email.value)) {
+				error.value.code = ERROR_INVALID_EMAIL.value;
+				error.value.msg = "*Invalid email";
 
-		if (email.value) collection.value.email = email.value;
+				return;
+			}
+			collection.value.email = email.value;
+		}
 
-		if (phone.value) collection.value.phone = phone.value;
+		if (phone.value) {
+			if (!validatePhone(phone.value)) {
+				error.value.code = ERROR_INVALID_PHONE.value;
+				error.value.msg = "Invalid phone number";
+				console.log("error");
+				return;
+			}
+			collection.value.phone = phone.value;
+		}
+
+		error.value.code = null;
+		error.value.msg = null;
 
 		const jsonObj = JSON.stringify(collection.value);
 		localStorage.setItem("collection", jsonObj);
@@ -222,37 +243,31 @@
 		if (path) navigateTo(path);
 	};
 
+	const validateEmail = (inputText) => {
+		if (inputText === null) return;
+		const mailFormat = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+		if (inputText.match(mailFormat)) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
+	const validatePhone = (inputNumber) => {
+		if (inputNumber === null) return;
+		const numberFormat =
+			/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
+		if (inputNumber.match(numberFormat)) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
 	const isCollectionSet = () => {
 		let flag = true;
-		const temp = localStorage.getItem("collection");
-		collection.value = JSON.parse(temp);
 
 		if (collection.value === null) return false;
-		else if (
-			collection.value.selectedCompany === null ||
-			collection.value.selectedCompany === undefined
-		)
-			flag = false;
-		else if (
-			collection.value.selectedOwner === null ||
-			collection.value.selectedOwner === undefined
-		)
-			flag = false;
-		else if (
-			collection.value.installationAddress === null ||
-			collection.value.installationAddress === undefined
-		)
-			flag = false;
-		else if (
-			collection.value.quoteType === null ||
-			collection.value.quoteType === undefined
-		)
-			flag = false;
-		else if (
-			collection.value.businessType === null ||
-			collection.value.businessType === undefined
-		)
-			flag = false;
 		else if (
 			email.value === null ||
 			email.value === undefined ||
@@ -265,18 +280,30 @@
 			phone.value === ""
 		)
 			flag = false;
-
-		switch (collection.value.quoteType) {
-			case "electric":
-				if (!isElectricFieldsSet()) flag = false;
-				break;
-			case "gas":
-				if (!isGasFieldsSet()) flag = false;
-				break;
-			case "both":
-				if (!isElectricFieldsSet()) flag = false;
-				else if (!isGasFieldsSet()) flag = false;
+		else if (
+			collection.value.businessType === null ||
+			collection.value.businessType === undefined ||
+			collection.value.businessType === ""
+		)
+			flag = false;
+		else {
+			switch (quoteType.value) {
+				case "electric":
+					if (!isElectricFieldsSet()) flag = false;
+					break;
+				case "gas":
+					if (!isGasFieldsSet()) flag = false;
+					break;
+				case "both":
+					if (!isElectricFieldsSet()) flag = false;
+					else if (!isGasFieldsSet()) flag = false;
+			}
 		}
+
+		// if (flag === true) {
+		// 	error.value.code = null;
+		// 	error.value.msg = null;
+		// }
 
 		return flag;
 	};
@@ -335,7 +362,6 @@
 	};
 
 	const reloadCollection = (data) => {
-		// console.log(data);
 		collection.value = data;
 		const jsonObj = JSON.stringify(collection.value);
 		localStorage.setItem("collection", jsonObj);
@@ -344,6 +370,16 @@
 
 	const submitForm = () => {
 		// @TODO: check if all the values are set
+		if (!validateEmail(email.value)) {
+			error.value.code = ERROR_INVALID_EMAIL.value;
+			error.value.msg = "*Invalid email";
+			return;
+		} else if (!validatePhone(phone.value)) {
+			error.value.code = ERROR_INVALID_PHONE.value;
+			error.value.msg = "Invalid phone number";
+			return;
+		}
+		console.log("ERROR");
 
 		const mongo = currentUser.mongoClient("mongodb-atlas");
 		const recordsCollection = mongo.db("db1").collection("records");

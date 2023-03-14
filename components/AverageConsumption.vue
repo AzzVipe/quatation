@@ -17,11 +17,11 @@
 					v-model="annualConsumption"
 					class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
 					:class="{
-						'!text-red-400 border': isNaN(annualConsumption),
+						'error-style': isNaN(annualConsumption),
 					}"
 					placeholder="Annual consumption (Kwh)" />
 			</div>
-			<p class="w-fit text-red-400 font-medium" v-if="isNaN(annualConsumption)">
+			<p class="error-msg-style" v-if="isNaN(annualConsumption)">
 				*Invalid input, only numbers allowed
 			</p>
 		</div>
@@ -64,11 +64,9 @@
 								class="w-80 max-w-md font-medium md:text-base text-sm rounded block p-3 focus:outline-none input-box-color"
 								placeholder="Reading in Kwh"
 								:class="{
-									'!text-red-400 border': isNaN(item.startDateReading),
+									'error-style': isNaN(item.startDateReading),
 								}" />
-							<p
-								class="w-fit text-red-400 font-medium"
-								v-if="isNaN(item.startDateReading)">
+							<p class="error-msg-style" v-if="isNaN(item.startDateReading)">
 								*Invalid
 							</p>
 						</div>
@@ -92,11 +90,9 @@
 								class="w-80 max-w-md font-medium md:text-base text-sm rounded block p-3 focus:outline-none input-box-color"
 								placeholder="Reading in Kwh"
 								:class="{
-									'!text-red-400 border': isNaN(item.endDateReading),
+									'error-style': isNaN(item.endDateReading),
 								}" />
-							<p
-								class="w-fit text-red-400 font-medium"
-								v-if="isNaN(item.endDateReading)">
+							<p class="error-msg-style" v-if="isNaN(item.endDateReading)">
 								*Invalid
 							</p>
 						</div>
@@ -136,7 +132,7 @@
 		v-else-if="!calcAnnualConsumption && isConsumptionCalculated"
 		class="flex w-11/12 flex-col justify-center box-styling">
 		<h1 class="md:text-3xl text-xl font-bold">
-			Your average {{ field }} annual consumption:
+			Your average annual {{ field }} consumption:
 		</h1>
 		<div v-for="item in readings" :key="item.label" class="flex flex-col gap-2">
 			<h2 class="font-bold text-xl dark:text-gray-400 text-gray-800">
@@ -289,9 +285,8 @@
 			avg += (element.endDateReading - element.startDateReading) / diff_days;
 		}
 		if (avg !== 0) {
-			if (collection.value.quoteType === "electric")
-				annualConsumption.value = avg * 365;
-			else annualConsumption.value = avg * 365 * 11.135413;
+			if (field === "electric") annualConsumption.value = avg * 365;
+			else if (field === "gas") annualConsumption.value = avg * 365 * 11.135413;
 			calcAnnualConsumption.value = false;
 			isConsumptionCalculated.value = true;
 		}

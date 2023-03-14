@@ -68,4 +68,12 @@
 	.grid-auto-column {
 		grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 	}
+
+	.error-style {
+		@apply dark:!text-red-400 text-red-500;
+	}
+
+	.error-msg-style {
+		@apply w-fit dark:!text-red-400 text-red-500 font-medium;
+	}
 }

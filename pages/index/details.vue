@@ -71,7 +71,6 @@
 									id="profile-type"
 									v-model="mpan.profileType"
 									type="tel"
-									pattern="[0-9]{2}"
 									class="w-full font-medium md:text-base text-sm rounded p-3 focus:outline-none input-box-color text-center"
 									size="1"
 									maxlength="2"
@@ -83,7 +82,6 @@
 									id="meter-time-switch-code"
 									v-model="mpan.meterTimeSwitchCode"
 									type="tel"
-									pattern="[0-9]{3}"
 									class="w-full font-medium md:text-base text-sm rounded p-3 focus:outline-none input-box-color text-center"
 									size="2"
 									maxlength="3"
@@ -99,7 +97,6 @@
 									id="line-loss-factor"
 									v-model="mpan.lineLossFactor"
 									type="tel"
-									pattern="[0-9]{3}"
 									class="w-full font-medium md:text-base text-sm rounded p-3 focus:outline-none input-box-color text-center"
 									size="2"
 									maxlength="3"
@@ -113,7 +110,6 @@
 									id="distributor-id"
 									v-model="mpan.distributorId"
 									type="tel"
-									pattern="[0-9]{2}"
 									class="w-full font-medium md:text-base text-sm rounded p-3 focus:outline-none input-box-color text-center"
 									size="1"
 									maxlength="2"
@@ -125,7 +121,6 @@
 									"
 									id="unique-number-1"
 									v-model="mpan.uniqueNumber1"
-									pattern="[0-9]{4}"
 									class="w-full font-medium md:text-base text-sm rounded p-3 focus:outline-none input-box-color text-center"
 									size="3"
 									maxlength="4"
@@ -135,7 +130,6 @@
 									@keyup="clickEvent('unique-number-1', $event, 'check-digit')"
 									id="unique-number-2"
 									v-model="mpan.uniqueNumber2"
-									pattern="[0-9]{4}"
 									class="w-full font-medium md:text-base text-sm rounded p-3 focus:outline-none input-box-color text-center"
 									size="3"
 									maxlength="4"
@@ -145,7 +139,6 @@
 									@keyup="clickEvent('unique-number-2', $event)"
 									id="check-digit"
 									v-model="mpan.checkDigit"
-									pattern="[0-9]{3}"
 									class="w-full font-medium md:text-base text-sm rounded p-3 focus:outline-none input-box-color text-center"
 									size="2"
 									maxlength="3"
@@ -187,11 +180,11 @@
 						maxlength="10"
 						class="w-full max-w-md font-medium md:text-base text-sm rounded block pl-10 p-3 focus:outline-none input-box-color"
 						:class="{
-							'!text-red-400 border': isNaN(mprn),
+							'error-style': isNaN(mprn),
 						}"
 						placeholder="MPR number" />
 				</div>
-				<p class="w-fit text-red-400 font-medium" v-if="isNaN(mprn)">
+				<p class="error-msg-style" v-if="isNaN(mprn)">
 					*Invalid input, only numbers are allowed
 				</p>
 			</div>
