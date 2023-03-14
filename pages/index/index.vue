@@ -249,7 +249,7 @@
 				</button>
 			</div>
 			<button
-				@click="saveState('/test')"
+				@click="saveState('/details')"
 				class="text-3xl absolute top-2/4 right-2">
 				<i class="ri-arrow-right-circle-fill"></i>
 			</button>

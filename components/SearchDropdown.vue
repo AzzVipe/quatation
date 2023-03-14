@@ -1,8 +1,8 @@
 <template>
 	<div v-if="list">
 		<button
-			:id="`dropdownSearchButton-${header}`"
-			:data-dropdown-toggle="`dropdownSearch-${header}`"
+			:id="`dropdownSearchButton-${field}`"
+			:data-dropdown-toggle="`dropdownSearch-${field}`"
 			data-dropdown-placement="bottom"
 			class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-semibold tracking-wide rounded md:text-base text-sm p-3 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
 			type="button">
@@ -24,7 +24,7 @@
 
 		<!-- Dropdown menu -->
 		<div
-			:id="`dropdownSearch-${header}`"
+			:id="`dropdownSearch-${field}`"
 			class="z-10 hidden bg-white rounded-lg shadow w-60 dark:bg-gray-700">
 			<div class="p-3">
 				<label for="input-group-search" class="sr-only">Search</label>
@@ -53,7 +53,7 @@
 			</div>
 			<ul
 				class="h-48 px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200"
-				:aria-labelledby="`dropdownSearchButton-${header}`">
+				:aria-labelledby="`dropdownSearchButton-${field}`">
 				<li
 					v-for="(item, index) in getList()"
 					:key="item.id"
@@ -61,14 +61,14 @@
 					<div
 						class="flex items-center pl-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
 						<input
-							:id="`item-${index}-${header}`"
+							:id="`item-${index}-${field}`"
 							name="default-radio"
 							type="radio"
 							:value="`${item}`"
 							v-model="selectedItem"
 							class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500" />
 						<label
-							:for="`item-${index}-${header}`"
+							:for="`item-${index}-${field}`"
 							class="w-full py-2 ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300"
 							>{{ item }}</label
 						>
@@ -81,28 +81,32 @@
 
 <script setup>
 	import { Dropdown } from "flowbite";
-	const { list, header } = defineProps(["list", "header"]);
+	const { list, header, field } = defineProps(["list", "header", "field"]);
 	const selectedItem = ref(null);
 	const searchedItem = ref(null);
 	const dropdown = ref(null);
 	const collection = ref(null);
 	const loading = ref(false);
+	const emit = defineEmits(["reloadCollection"]);
 
 	onBeforeMount(() => {
 		loading.value = true;
 		const temp = localStorage.getItem("collection");
 		collection.value = JSON.parse(temp);
-		selectedItem.value = collection.value[header];
 
-		if (selectedItem.value === undefined) selectedItem.value = header;
+		selectedItem.value = header;
+
+		if (
+			collection.value[field] !== undefined &&
+			collection.value[field] !== null
+		)
+			selectedItem.value = collection.value[field];
 		loading.value = false;
 	});
 
 	onMounted(() => {
-		const $targetEl = document.getElementById(`dropdownSearch-${header}`);
-		const $triggerEl = document.getElementById(
-			`dropdownSearchButton-${header}`
-		);
+		const $targetEl = document.getElementById(`dropdownSearch-${field}`);
+		const $triggerEl = document.getElementById(`dropdownSearchButton-${field}`);
 		const options = {
 			placement: "bottom",
 			triggerType: "click",
@@ -131,18 +135,17 @@
 
 		if (collection.value === null) {
 			let temp = {};
-			temp[header] = newVal;
+			temp[field] = newVal;
 
 			const jsonObj = JSON.stringify(temp);
-			// console.log(temp[header]);
+			// console.log(temp[field]);
 			localStorage.setItem("collection", jsonObj);
 			return;
 		}
 
-		collection.value[header] = newVal;
-		const jsonObj = JSON.stringify(collection.value);
-		console.log(collection.value[header]);
-		localStorage.setItem("collection", jsonObj);
+		collection.value[field] = newVal;
+		emit("reloadCollection", collection.value);
+		// localStorage.setItem("collection", jsonObj);
 	});
 
 	const saveState = () => {
