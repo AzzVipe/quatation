@@ -480,7 +480,7 @@
 		const jsonObj = JSON.stringify(collection.value);
 		localStorage.setItem("collection", jsonObj);
 
-		if (path && isDataSet()) navigateTo(path);
+		if (path) navigateTo(path);
 	};
 
 	const clickEvent = (previous, current, next) => {
